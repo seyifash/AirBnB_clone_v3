@@ -35,7 +35,7 @@ def del_user(user_id):
         abort(404)
     user.delete()
     storage.save()
-    return jsonify({})
+    return make_response(jsonify({}), 200)
 
 
 @app_views.route('/users', methods=['POST'], strict_slashes=False)
@@ -48,22 +48,23 @@ def post_user():
         abort(400, description="Missing email")
     if 'password' not in data:
         abort(400, description="Missing password")
-    user = State(**data)
+    user = User(**data)
     user.save()
     return make_response(jsonify(user.to_dict()), 201)
 
 
-@app_views.route('/states/<state_id>', methods=['PUT'],
+@app_views.route('/users/<user_id>', methods=['PUT'],
                  strict_slashes=False)
-def put_user(state_id):
-    """update a state"""
+def put_user(user_id):
+    """update a user"""
     if not request.get_json():
         abort(400, description="Not a JSON")
-    state = storage.get(State, state_id)
-    if state is None:
+    user = storage.get(User, user_id)
+    if user is None:
         abort(404)
-    for key, value in request.get_json().items():
+    data = request.get_json()
+    for key, value in data.items():
         if key not in ['id', 'created_at', 'updated_at']:
-            setattr(state, key, value)
+            setattr(user, key, value)
     storage.save()
-    return make_response(jsonify(user.to_dict()))
+    return make_response(jsonify(user.to_dict()), 200)
