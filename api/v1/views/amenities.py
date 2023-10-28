@@ -11,9 +11,9 @@ from flask import Flask, request, jsonify, abort, make_response
 def get_amenities():
     """Retrieve the list of all Amenity objects"""
     the_amenity = []
-    amenity = storage.all(Amenity).values()
-    for amnty in amenity:
-        the_amenity.append(amnty.to_dict())
+    new_amenity = storage.all(Amenity).values()
+    for amenity in new_amenity:
+        the_amenity.append(amenity.to_dict())
     return jsonify(the_amenity)
 
 
