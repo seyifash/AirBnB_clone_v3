@@ -19,7 +19,8 @@ def teardown_appcontext(error):
 @app.errorhandler(404)
 def page_not_found(error):
     """Load 404 page error"""
-    return make_response(jsonify({"error": "Not found"}))
+    response = jsonify({"error": "Not found"})
+    return make_response(response, 404)
 
 
 if __name__ == "__main__":
