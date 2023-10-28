@@ -2,7 +2,7 @@
 """user object that handles all default RESTful API
 """
 
-from model.user import User
+from models.user import User
 from models import storage
 from api.v1.views import app_views
 from flask import jsonify, request, abort, make_response
@@ -56,7 +56,7 @@ def post_user():
 
 @app_views.route('/states/<state_id>', methods=['PUT'],
                  strict_slashes=False)
-def put_state(state_id):
+def put_user(state_id):
     """update a state"""
     if not request.get_json():
         abort(400, description="Not a JSON")
