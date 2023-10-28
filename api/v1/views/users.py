@@ -16,7 +16,7 @@ def get_all_users():
     return jsonify(users)
 
 
-@app_views.route('/users/<string:user_id>', methods=['GET'],
+@app_views.route('/users/<user_id>', methods=['GET'],
                  strict_slashes=False)
 def get_user(user_id):
     """get user information by user_id"""
@@ -26,7 +26,7 @@ def get_user(user_id):
     return jsonify(user.to_dict())
 
 
-@app_views.route('/users/<string:user_id>', methods=['DELETE'],
+@app_views.route('/users/<user_id>', methods=['DELETE'],
                  strict_slashes=False)
 def del_user(user_id):
     """delete user by user_id"""
