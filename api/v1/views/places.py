@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 """ new view for Place objects that handles all default RESTFul API actions
 """
+from models import Place
+from models import User
+from models import City
 from api.v1.views import app_views
-from models import storage, City, Place, User
+from models import storage
 from flask import Flask, request, jsonify, abort, make_response
 
 
