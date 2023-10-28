@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """user object that handles all default RESTful API
 """
+
 from model.user import User
 from models import storage
 from api.v1.views import app_views
