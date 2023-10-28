@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """user object that handles all default RESTful API
 """
-
 from models.user import User
 from models import storage
 from api.v1.views import app_views
@@ -42,13 +41,13 @@ def del_user(user_id):
 @app_views.route('/users', methods=['POST'], strict_slashes=False)
 def post_user():
     """create a new user"""
-    if not request.get_json():
-        abort(400, description="Not a JSON")
-    if 'email' not in request.get_json():
-        abort(400, description="Missing email")
-    if 'password' not in request.get_json():
-        abort(400, description="Missing password")
     data = request.get_json()
+    if not data:
+        abort(400, description="Not a JSON")
+    if 'email' not in data:
+        abort(400, description="Missing email")
+    if 'password' not in data:
+        abort(400, description="Missing password")
     user = State(**data)
     user.save()
     return make_response(jsonify(user.to_dict()), 201)
