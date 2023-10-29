@@ -10,7 +10,7 @@ from api.v1.views import app_views
 import os
 
 
-@app_views.route('/places/<place_id>/amenities', methods=['GET'],
+@app_views.route('places/<place_id>/amenities', methods=['GET'],
                  strict_slashes=False)
 def get_place_amenities(place_id):
     """Retrieves the list of all Amenity objects of a Place
