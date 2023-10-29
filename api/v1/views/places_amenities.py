@@ -2,8 +2,8 @@
 """view for the link between Place objects and Amenity objects that
 handles all default RESTFul
 """
-from models import Place
-from models import Amenity
+from models.place import Place
+from models.amenity import Amenity
 from models import storage
 from flask import Flask, abort, make_response, request, jsonify
 from api.v1.views import app_views
