@@ -7,6 +7,9 @@ from models.city import City
 from api.v1.views import app_views
 from models import storage
 from flask import Flask, request, jsonify, abort, make_response
+import requests
+import json
+from os import getenv
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET'],
@@ -78,3 +81,55 @@ def put_place(place_id):
             setattr(place, key, value)
     storage.save()
     return make_response(jsonify(place.to_dict()), 200)
+
+
+@app_viees.route('/places_search', method=['POST'],
+                 strict_slashes=False)
+def search_place():
+    """Retrieves all places obj depending on json"""
+    data = request.get_json()
+    if data is None:
+        abort(400, description="Not a JSON")
+    if not data or (
+            not data.get('states') and
+            not data.get('cities') and
+            not data.get('amenities')
+            ):
+        places = storage.all(Place)
+        return jsonify([place.to_dict() for place in places.values()])
+    places = []
+    if data.get('states'):
+        states = [storage.get["City", id) for id in data.get('cities')]
+        for state in states:
+            for city in state.cities:
+                for place in city.places:
+                    places.append(place)
+
+    if not places:
+        places = storage.all(Place)
+        places = [place for place in places.values()]
+
+    if data.get('amenities'):
+        amenity = [storage.get("Amenity", id) for id in data.get('amenities')]
+        i = 0
+        limit = len(places)
+        HBNB_API_HOST = getenv('HBNB_API_HOST')
+        HBNB_API_POST = getenv('HBNB_API_POST')
+
+        port = 5000 if not HBNB_API_HOST else HBNB_API_POST
+        first_url = "http://0.0.0.0:{}/api/vi/places/".format(port)
+        while i < limit:
+            place = places[i]
+            url = first_url + '{}/amenities'
+            req = url.format(place.id)
+            response = requests.get(req)
+            amenity_text = json.load(response.text)
+            amenities = [storage.get("Amenity", o['id']) for o in amenity_text]
+            for amenty in amenity:
+                if amenty not in amenities:
+                    places.pop(i)
+                    i -= 1
+                    limit -= 1
+                    break
+            i += 1
+        return jsonify([place.to_dict() for place in places])
