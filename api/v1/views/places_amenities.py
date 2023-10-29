@@ -2,15 +2,15 @@
 """view for the link between Place objects and Amenity objects that
 handles all default RESTFul
 """
-from models import storage
 from models import Place
 from models import Amenity
+from models import storage
 from flask import Flask, abort, make_response, request, jsonify
 from api.v1.views import app_views
 import os
 
 
-@app_views.route('places/<place_id>/amenities', methods=['GET'],
+@app_views.route('/places/<place_id>/amenities', methods=['GET'],
                  strict_slashes=False)
 def get_place_amenities(place_id):
     """Retrieves the list of all Amenity objects of a Place
@@ -28,8 +28,8 @@ def get_place_amenities(place_id):
     return jsonify(amenities)
 
 
-@app_views.route('places/<place_id>/amenities/amenity_id', methods=['DELETE'],
-                 strict_slashes=False)
+@app_views.route('/places/<place_id>/amenities/<amenity_id>',
+                 methods=['DELETE'], strict_slashes=False)
 def delete_place_amenities(place_id, amenity_id):
     """Deletes a Amenity object to a Place"""
     places = storage.get(Place, place_id)
@@ -50,7 +50,7 @@ def delete_place_amenities(place_id, amenity_id):
     return make_response(jsonify({}), 200)
 
 
-@app_views.route('places/<place_id>/amenities/amenity_id', methods=['POST'],
+@app_views.route('/places/<place_id>/amenities/<amenity_id>', methods=['POST'],
                  strict_slashes=False)
 def post_place_amenities(place_id, amenity_id):
     """Link a Amenity object to a Place"""
