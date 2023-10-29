@@ -83,7 +83,7 @@ def put_place(place_id):
     return make_response(jsonify(place.to_dict()), 200)
 
 
-@app_viees.route('/places_search', method=['POST'],
+@app_views.route('/places_search', method=['POST'],
                  strict_slashes=False)
 def search_place():
     """Retrieves all places obj depending on json"""
@@ -99,7 +99,7 @@ def search_place():
         return jsonify([place.to_dict() for place in places.values()])
     places = []
     if data.get('states'):
-        states = [storage.get["City", id) for id in data.get('cities')]
+        states = [storage.get["City", id] for id in data.get('cities')]
         for state in states:
             for city in state.cities:
                 for place in city.places:
