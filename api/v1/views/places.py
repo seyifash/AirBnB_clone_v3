@@ -50,14 +50,14 @@ def post_place(city_id):
         abort(404)
     new_place = request.get_json()
     if not new_place:
-        abort(400, "Not a JSON")
+        abort(400, description="Not a JSON")
     if "user_id" not in new_place:
-        abort(400, "Missing user_id")
+        abort(400, description="Missing user_id")
     user_id = new_place['user_id']
     if not storage.get("User", user_id):
         abort(404)
     if "name" not in new_place:
-        abort(400, "Missing name")
+        abort(400, description="Missing name")
     place = Place(**new_place)
     setattr(place, 'city_id', city_id)
     storage.new(place)
@@ -75,79 +75,73 @@ def put_place(place_id):
 
     body_request = request.get_json()
     if not body_request:
-        abort(400, "Not a JSON")
+        abort(400, descriprion="Not a JSON")
 
-    for k, v in body_request.items():
-        if k not in ['id', 'user_id', 'city_at',
+    for key, vue in body_request.items():
+        if key not in ['id', 'user_id', 'city_at',
                      'created_at', 'updated_at']:
-            setattr(place, k, v)
+            setattr(place, key, value)
 
     storage.save()
     return make_response(jsonify(place.to_dict()), 200)
 
 
-@app_views.route('/places_search', methods=['POST'],
-                 strict_slashes=False)
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
 def places_search():
     """
-    Retrieves all Place objects depending of
-    the JSON in the body of the request
+    Retrieves all Place objects depending of the JSON in the body
+    of the request
     """
-    body_r = request.get_json()
-    if body_r is None:
-        abort(400, "Not a JSON")
 
-    if not body_r or (
-            not body_r.get('states') and
-            not body_r.get('cities') and
-            not body_r.get('amenities')
-    ):
-        places = storage.all(Place)
-        return jsonify([place.to_dict() for place in places.values()])
+    if request.get_json() is None:
+        abort(400, description="Not a JSON")
 
-    places = []
+    data = request.get_json()
 
-    if body_r.get('states'):
-        states = [storage.get("State", id) for id in body_r.get('states')]
+    if data and len(data):
+        states = data.get('states', None)
+        cities = data.get('cities', None)
+        amenities = data.get('amenities', None)
 
-        for state in states:
-            for city in state.cities:
+    if not data or not len(data) or (
+            not states and
+            not cities and
+            not amenities):
+        places = storage.all(Place).values()
+        list_places = []
+        for place in places:
+            list_places.append(place.to_dict())
+        return jsonify(list_places)
+
+    list_places = []
+    if states:
+        states_obj = [storage.get(State, s_id) for s_id in states]
+        for state in states_obj:
+            if state:
+                for city in state.cities:
+                    if city:
+                        for place in city.places:
+                            list_places.append(place)
+
+    if cities:
+        city_obj = [storage.get(City, c_id) for c_id in cities]
+        for city in city_obj:
+            if city:
                 for place in city.places:
-                    places.append(place)
+                    if place not in list_places:
+                        list_places.append(place)
 
-    if body_r.get('cities'):
-        cities = [storage.get("City", id) for id in body_r.get('cities')]
+    if amenities:
+        if not list_places:
+            list_places = storage.all(Place).values()
+        amenities_obj = [storage.get(Amenity, a_id) for a_id in amenities]
+        list_places = [place for place in list_places
+                       if all([am in place.amenities
+                               for am in amenities_obj])]
+    places = []
+    for p in list_places:
+        d = p.to_dict()
+        d.pop('amenities', None)
+        places.append(d)
 
-        for city in cities:
-            for place in city.places:
-                if place not in places:
-                    places.append(place)
-
-    if not places:
-        places = storage.all(Place)
-        places = [place for place in places.values()]
-
-    if body_r.get('amenities'):
-        ams = [storage.get("Amenity", id) for id in body_r.get('amenities')]
-        i = 0
-        limit = len(places)
-        HBNB_API_HOST = getenv('HBNB_API_HOST')
-        HBNB_API_PORT = getenv('HBNB_API_PORT')
-
-        port = 5000 if not HBNB_API_PORT else HBNB_API_PORT
-        first_url = "http://0.0.0.0:{}/api/v1/places/".format(port)
-        while i < limit:
-            place = places[i]
-            url = first_url + '{}/amenities'
-            req = url.format(place.id)
-            response = requests.get(req)
-            am_d = json.loads(response.text)
-            amenities = [storage.get("Amenity", o['id']) for o in am_d]
-            for amenity in ams:
-                if amenity not in amenities:
-                    places.pop(i)
-                    i -= 1
-                    limit -= 1
-                    break
-            i += 1
-    return jsonify([place.to_dict() for place in places])
+    return jsonify(places)
