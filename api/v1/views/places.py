@@ -16,16 +16,17 @@ from os import getenv
                  strict_slashes=False)
 def get_places(city_id):
     """ Retrieves the list of all Place objects """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if not city:
         abort(404)
-    return jsonify([place.to_dict() for place in city.places])
+    places = [place.to_dict() for place in city.places]
+    return jsonify(places)
 
 
 @app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
 def get_place(place_id):
     """ Retrieves a Place object """
-    place = storage.get("Place", place_id)
+    place = storage.get(Place, place_id)
     if not place:
         abort(404)
     return jsonify(place.to_dict())
@@ -35,7 +36,7 @@ def get_place(place_id):
                  strict_slashes=False)
 def del_place(place_id):
     """ Deletes a Place object """
-    place = storage.get("Place", place_id)
+    place = storage.get(Place, place_id)
     if not place:
         abort(404)
     place.delete()
@@ -47,7 +48,7 @@ def del_place(place_id):
                  strict_slashes=False)
 def post_place(city_id):
     """ Creates a Place object """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if not city:
         abort(404)
     new_place = request.get_json()
@@ -71,7 +72,7 @@ def post_place(city_id):
                  strict_slashes=False)
 def put_place(place_id):
     """ Updates a Place object """
-    place = storage.get("Place", place_id)
+    place = storage.get(Place, place_id)
     if not place:
         abort(404)
 
@@ -79,7 +80,7 @@ def put_place(place_id):
     if not body_request:
         abort(400, descriprion="Not a JSON")
 
-    for key, vue in body_request.items():
+    for key, value in body_request.items():
         if key not in ['id', 'user_id', 'city_id',
                        'created_at', 'updated_at']:
             setattr(place, key, value)
