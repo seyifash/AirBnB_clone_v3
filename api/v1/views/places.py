@@ -5,6 +5,8 @@ from flask import jsonify, abort, make_response, request
 from models import storage
 from models.city import City
 from models.place import Place
+from models.state import State
+from models.amenity import Amenity
 import requests
 import json
 from os import getenv
@@ -79,7 +81,7 @@ def put_place(place_id):
 
     for key, vue in body_request.items():
         if key not in ['id', 'user_id', 'city_at',
-                     'created_at', 'updated_at']:
+                       'created_at', 'updated_at']:
             setattr(place, key, value)
 
     storage.save()
@@ -97,51 +99,40 @@ def places_search():
         abort(400, description="Not a JSON")
 
     data = request.get_json()
+    states = data.get('states', [])
+    cities = data.get('cities', [])
+    amenities = data.get('amenities', [])
 
-    if data and len(data):
-        states = data.get('states', None)
-        cities = data.get('cities', None)
-        amenities = data.get('amenities', None)
-
-    if not data or not len(data) or (
-            not states and
-            not cities and
-            not amenities):
+    if data is None or not (states or cities or amenities):
         places = storage.all(Place).values()
-        list_places = []
-        for place in places:
-            list_places.append(place.to_dict())
-        return jsonify(list_places)
+        result = [place.to_dict() for place in places]
+        return jsonify(result)
 
-    list_places = []
+    the_place = []
     if states:
-        states_obj = [storage.get(State, s_id) for s_id in states]
-        for state in states_obj:
+        the_state = [storage.get(State, the_id) for the_id in states]
+        for state in the_state:
             if state:
                 for city in state.cities:
                     if city:
                         for place in city.places:
-                            list_places.append(place)
+                            the_place.append(place)
 
     if cities:
-        city_obj = [storage.get(City, c_id) for c_id in cities]
-        for city in city_obj:
+        city_places = []
+        for city_id in cities:
+            city = storage.get(City, city_id)
             if city:
-                for place in city.places:
-                    if place not in list_places:
-                        list_places.append(place)
+                city_places.extend(city.places)
+            the_place.extend(city_places)
 
     if amenities:
-        if not list_places:
-            list_places = storage.all(Place).values()
-        amenities_obj = [storage.get(Amenity, a_id) for a_id in amenities]
-        list_places = [place for place in list_places
-                       if all([am in place.amenities
-                               for am in amenities_obj])]
-    places = []
-    for p in list_places:
-        d = p.to_dict()
-        d.pop('amenities', None)
-        places.append(d)
+        filtered_places = []
+        for place in the_place:
+            place_amenities = [amenity.id for amenity in place.amenities]
+            if set(amenities).issubset(set(place_amenities)):
+                filtered_places.append(place)
+        the_place = filtered_places
+    result = [place.to_dict() for place in the_place]
 
-    return jsonify(places)
+    return jsonify(result)
