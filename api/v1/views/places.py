@@ -49,22 +49,21 @@ def del_place(place_id):
 def post_place(city_id):
     """ Creates a Place object """
     city = storage.get(City, city_id)
-    if not city:
+    if city is None:
         abort(404)
-    new_place = request.get_json()
-    if not new_place:
+    data = request.get_json()
+    if data is None:
         abort(400, description="Not a JSON")
-    if "user_id" not in new_place:
+    if 'user_id' not in data:
         abort(400, description="Missing user_id")
-    user_id = new_place['user_id']
-    if not storage.get("User", user_id):
-        abort(404)
-    if "name" not in new_place:
+    if 'name' not in data:
         abort(400, description="Missing name")
-    place = Place(**new_place)
-    setattr(place, 'city_id', city_id)
-    storage.new(place)
-    storage.save()
+    user = storage.get(User, data['user_id'])
+    if user is None:
+        abort(404)
+    data['city_id'] = city_id
+    place = Place(**data)
+    place.save()
     return make_response(jsonify(place.to_dict()), 201)
 
 
@@ -73,18 +72,15 @@ def post_place(city_id):
 def put_place(place_id):
     """ Updates a Place object """
     place = storage.get(Place, place_id)
-    if not place:
+    if place is None:
         abort(404)
-
-    body_request = request.get_json()
-    if not body_request:
-        abort(400, descriprion="Not a JSON")
-
-    for key, value in body_request.items():
-        if key not in ['id', 'user_id', 'city_id',
-                       'created_at', 'updated_at']:
+    data = request.get_json()
+    if data is None:
+        abort(400, description="Not a JSON")
+    for key, value in data.items():
+        if key not in ('id', 'user_id', 'city_id',
+                       'created_at', 'updated_at'):
             setattr(place, key, value)
-
     storage.save()
     return make_response(jsonify(place.to_dict()), 200)
 
