@@ -119,20 +119,24 @@ def places_search():
                             the_place.append(place)
 
     if cities:
-        city_places = []
-        for city_id in cities:
-            city = storage.get(City, city_id)
+        city_places = [storage.get(City, city_id) for city_id in cities]
+        for city in city_places:
             if city:
-                city_places.extend(city.places)
-            the_place.extend(city_places)
+                for place in city.places:
+                    if place not in the_place:
+                        the_place.append(place)
 
     if amenities:
-        filtered_places = []
-        for place in the_place:
-            place_amenities = [amenity.id for amenity in place.amenities]
-            if set(amenities).issubset(set(place_amenities)):
-                filtered_places.append(place)
-        the_place = filtered_places
-    result = [place.to_dict() for place in the_place]
+        if not the_place:
+            the_place = storage.all(Place).values()
+        amenities_obj = [storage.get(Amenity, a_id) for a_id in amenities]
+        the_place = [place for place in the_place
+                     if all([am in place.amenities
+                            for am in amenities_obj])]
+    places = []
+    for p in the_place:
+        d = p.to_dict()
+        d.pop('amenities', None)
+        places.append(d)
 
-    return jsonify(result)
+    return jsonify(places)
