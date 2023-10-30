@@ -6,6 +6,7 @@ from models import storage
 from models.city import City
 from models.place import Place
 from models.state import State
+from models.user import User
 from models.amenity import Amenity
 import requests
 import json
@@ -17,7 +18,7 @@ from os import getenv
 def get_places(city_id):
     """ Retrieves the list of all Place objects """
     city = storage.get(City, city_id)
-    if not city:
+    if city is None:
         abort(404)
     places = [place.to_dict() for place in city.places]
     return jsonify(places)
@@ -27,7 +28,7 @@ def get_places(city_id):
 def get_place(place_id):
     """ Retrieves a Place object """
     place = storage.get(Place, place_id)
-    if not place:
+    if place is None:
         abort(404)
     return jsonify(place.to_dict())
 
@@ -37,7 +38,7 @@ def get_place(place_id):
 def del_place(place_id):
     """ Deletes a Place object """
     place = storage.get(Place, place_id)
-    if not place:
+    if place is None:
         abort(404)
     place.delete()
     storage.save()
